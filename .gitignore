@@ -1,0 +1,16 @@
+# venv
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local environment secrets
+.env
+
+# SQLite DB file if you’re persisting locally
+*.db
+*.sqlite
+*.sqlite3
