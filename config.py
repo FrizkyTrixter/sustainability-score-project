@@ -16,4 +16,7 @@ DEFAULT_WEIGHTS = {
 # Optional LLM hook (off by default)
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "")          # e.g., "openai"
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")
+LLM_PROVIDER = str((LLM_PROVIDER))
+LLM_API_KEY = str((LLM_API_KEY))
+
 

@@ -123,46 +123,15 @@ def rule_based_suggestions(request_payload: Dict) -> List[str]:
     return suggestion_list
 
 
+import openai
+
 def llm_supplement(request_payload: Dict, llm_summary_text: str) -> List[str]:
-    """
-    Generate AI-driven (LLM) sustainability suggestions, up to 3 lines.
-
-    Behavior:
-    - If LLM_PROVIDER == "openai" and we have an API key, we call the OpenAI API
-      to generate concise improvement ideas.
-    - If not configured, or if anything fails (import error, network error, etc.),
-      we quietly return [] so the API still works without AI.
-
-    Parameters:
-        request_payload : dict of the raw product payload sent by the client
-        llm_summary_text: short human-readable summary string about the product
-                          (used to provide context to the model)
-
-    Returns:
-        List[str] of up to 3 unique suggestion strings.
-        Example:
-          [
-            "Switch to rail instead of air for long-haul freight.",
-            "Increase recycled aluminum share in housing.",
-            "Add repair instructions to promote reuse."
-          ]
-    """
-
-    # If we aren't configured to call OpenAI, bail out fast.
     if not (LLM_PROVIDER == "openai" and LLM_API_KEY):
         return []
 
     try:
-        # Lazy import so the service can still run without openai installed.
-        # NOTE: Using OpenAI Python SDK v1.x style client.
-        from openai import OpenAI
+        openai.api_key = LLM_API_KEY
 
-        openai_client = OpenAI(api_key=LLM_API_KEY)
-
-        # Prompt engineering:
-        # - We instruct the model to act like a sustainability analyst.
-        # - We ask for up to 3 concise, actionable suggestions.
-        # - We explicitly say: "no numbering", to get raw bullet-style lines.
         llm_prompt = (
             "You are a sustainability analyst. Based on the product payload and summary, "
             "suggest up to 3 concise, actionable improvements. "
@@ -171,7 +140,7 @@ def llm_supplement(request_payload: Dict, llm_summary_text: str) -> List[str]:
             f"Summary: {llm_summary_text}"
         )
 
-        completion_response = openai_client.chat.completions.create(
+        completion_response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "user", "content": llm_prompt}
@@ -180,29 +149,22 @@ def llm_supplement(request_payload: Dict, llm_summary_text: str) -> List[str]:
             max_tokens=180,
         )
 
-        # Grab the model text output
-        model_raw_text: str = completion_response.choices[0].message.content or ""
-
-        # We'll split the model output by lines and strip bullets like "-", "•"
-        # Then dedupe and cap length at 3.
+        model_raw_text = completion_response["choices"][0]["message"]["content"] or ""
         cleaned_suggestions: List[str] = []
         for raw_line in model_raw_text.splitlines():
-            if not raw_line.strip():
+            raw_line = raw_line.strip()
+            if not raw_line:
                 continue
-
-            # Remove leading bullets / dashes / spaces.
             normalized_line = raw_line.strip("-• ").strip()
-
             if normalized_line and normalized_line not in cleaned_suggestions:
                 cleaned_suggestions.append(normalized_line)
-
             if len(cleaned_suggestions) >= 3:
                 break
 
         return cleaned_suggestions
 
-    except Exception:
-        # "Fail silent" policy:
-        # - If the model call or import explodes, we don't want to 500 the request.
-        # - We'll just return an empty list so the API still responds.
+    except Exception as e:
+        print("Error occurred:", e)
         return []
+
+
