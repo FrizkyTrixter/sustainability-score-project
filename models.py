@@ -81,27 +81,25 @@ class ScorePayload:
             weights=raw_dict.get("weights"),
         )
 
-    def validate(self) -> List[str]:
-        """
-        Validate that the required/critical fields in this payload are well-formed.
+    def validate(self) -> list[str]:
+        error_messages: list[str] = []
 
-        Current validation rules:
-        - product_name must not be empty.
-        - gwp, cost, circularity, weight_grams must all be >= 0.
-
-        Returns:
-            A list of human-readable error strings. Empty list means "valid".
-        """
-        error_messages: List[str] = []
-
-        # Require a product name so we can identify rows in history, summary tables, etc.
         if not self.product_name:
             error_messages.append("product_name is required.")
 
-        # Ensure numeric fields are non-negative.
+        if not self.transport:
+            error_messages.append("transport is required.")
+
+        if not self.packaging:
+            error_messages.append("packaging is required.")
+
         for numeric_field_name in ["gwp", "cost", "circularity", "weight_grams"]:
             numeric_value = getattr(self, numeric_field_name)
             if numeric_value < 0:
                 error_messages.append(f"{numeric_field_name} must be >= 0.")
+
+        # circularity sanity check (0-100)
+        if self.circularity > 100:
+            error_messages.append("circularity must be <= 100.")
 
         return error_messages

@@ -24,3 +24,8 @@ pip install -r requirements.txt
 #   echo "CIRCULARITY_MAX=100" >> .env
 
 python app.py          # serves API + dashboard on http://localhost:5055
+
+# Run unit tests
+
+python -m unittest discover tests
+
