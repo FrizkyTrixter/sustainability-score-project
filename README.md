@@ -1,4 +1,4 @@
-# Vrtta Sustainability Scoring (Flask + SQLite + Tiny Dashboard)
+# Sustainability Scoring (Flask + SQLite + Tiny Dashboard)
 
 ### Endpoints
 
