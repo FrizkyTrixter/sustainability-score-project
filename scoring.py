@@ -1,4 +1,4 @@
-# scoring.py
+# This is scoring.py
 from typing import Dict
 from config import GWP_MAX, COST_MAX, CIRCULARITY_MAX
 
