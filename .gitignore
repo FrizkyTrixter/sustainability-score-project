@@ -3,7 +3,7 @@
 venv/
 env/
 
-# Python cache
+# Python3 cache
 __pycache__/
 *.pyc
 
